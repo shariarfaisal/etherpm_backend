@@ -1,14 +1,17 @@
+const config = require('config')
 const jwt = require('jsonwebtoken');
+const { AuthenticationError, BadRequest } = require('../utils/customResponses')
+
 
 const userAuth = (req,res,next) => {
-  const token = req.header('usertoken');
-  if(!token) return res.status(401).send('You are not authorized!');
+  const token = req.header('etherpm_user_token');
+  if(!token) return AuthenticationError(res,'You are not authenticated!')
   try{
-    const decoded = jwt.verify(token,'secretkey');
+    const decoded = jwt.verify(token,config.get('secretkey'));
     req.user = decoded;
     next();
   }catch(e){
-    return res.status(400).send('Invalid token');
+    return BadRequest(res,e.message)
   }
 }
 
