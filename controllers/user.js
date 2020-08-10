@@ -25,7 +25,7 @@ const login = async (req,res) => {
 }
 
 const signup = async (req,res) => {
-  const { name, email, password, confirmPassword, refferalID } = req.body
+  const { name, email, password, refferalID } = req.body
 
   /* User data validation */
   const { errors, isValid } = signupValidator(req.body)
@@ -33,7 +33,7 @@ const signup = async (req,res) => {
 
   /* Checking emial existence */
   const emailExists = await User.findOne({ email });
-  if(emailExists) return BadRequest(res,{ email: "Email taken!"})
+  if(emailExists) return BadRequest(res,{ email: "Email already exists!"})
 
   /* Create new user */
   let user = new User({ name, email, password, refferalID: refferalID ? refferalID : '', tokens: [] })
@@ -51,7 +51,7 @@ const signup = async (req,res) => {
 const getProfile = async (req,res) => {
   const user = await User.findById(req.user._id).select(' -password ')
   if(!user) return NotFound(res,'User not found!')
-  return DataFound(res,user)
+  return Success(res,user)
 }
 
 const getUsers = async (req,res) => {

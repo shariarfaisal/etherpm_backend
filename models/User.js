@@ -44,7 +44,7 @@ const userSchema = new Schema({
 })
 
 userSchema.methods.getToken = function(){
-  return jwt.sign({ _id: this._id },config.get('secretkey'),{ expiresIn: '7d'})
+  return 'Bearer '+jwt.sign({ _id: this._id },config.get('secretkey'),{ expiresIn: '7d'})
 }
 
 

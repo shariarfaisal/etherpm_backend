@@ -1,6 +1,6 @@
 const validator = require('validator');
 
-const signupValidator = ({ name, email, password, confirmPassword, refferalID }) => {
+const signupValidator = ({ name, email, password, refferalID }) => {
   const errors = {}
 
   if(!name) errors.name = "Name required."
@@ -12,9 +12,6 @@ const signupValidator = ({ name, email, password, confirmPassword, refferalID })
 
   if(!password) errors.password = "Password required."
   else if(password.length < 6) errors.password = "Password must be at least 6 characters."
-
-  if(!confirmPassword) errors.confirmPassword = "Confirm password required."
-  else if(password !== confirmPassword) errors.confirmPassword = "Confirm password doesn't match."
 
   if(refferalID && typeof refferalID !== 'string') errors.refferalID = "Refferal ID isn't valid."
 
