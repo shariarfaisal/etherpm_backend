@@ -1,8 +1,8 @@
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const User = require('../models/User')
-const { signupValidator, loginValidator } = require('../validators/user')
-const { Success, BadRequest, NotFound, DataFound, DataCreated, ValidationError, LoginSuccess } = require('../utils/customResponses')
+const { signupValidator, loginValidator, updateValidator } = require('../validators/user')
+const { Success, BadRequest, NotFound, DataFound, DataCreated, ValidationError, LoginSuccess, ServerError } = require('../utils/customResponses')
 const { isIdValid } = require('../utils/helpers')
 
 const login = async (req,res) => {
@@ -66,8 +66,54 @@ const getUser = async (req,res) => {
   /* Get User By ID */
   const user = await User.findById(req.params.id).select(' -password ')
   if(!user) return NotFound(res,'Not Found!')
-  return DataFound(res,user)
+  return Success(res,user)
 }
+
+
+const updateProfile = async (req,res) => {
+  const { errors, isValid } = updateValidator(req.body)
+  if(!isValid) return ValidationError(res,errors)
+
+  const user = await User.findById(req.user._id)
+  if(!user) return NotFound(res,'User not found!')
+
+  const { email, name} = req.body
+
+  if(user.email !== email){
+    const emailExists = await User.findOne({ email })
+    if(emailExists) return ValidationError(res,{email: "Email already exists."})
+  }
+
+  const getUpdate = await User.findByIdAndUpdate(req.user._id,{$set:{ email, name }},{new: true}).select(' -password ')
+  if(!getUpdate) return ServerError(res,getUpdate.message)
+
+  return Success(res,getUpdate)
+}
+
+const updatePassword = async (req,res) => {
+  const { password, newPassword } = req.body
+
+  const error = {}
+  if(!newPassword) error.newPassword = "Password required!"
+  else if(newPassword.length < 6) error.newPassword = "Password must be at least 6 characters."
+
+  if(Object.keys(error).length !== 0) return ValidationError(res,error)
+
+  const user = await User.findById(req.user._id)
+  if(!user) return NotFound(res,"User not found!")
+
+  const oldPassIsValid = await bcrypt.compare(password,user.password)
+  if(!oldPassIsValid){
+    return ValidationError(res,{password: "Password isn't valid!"})
+  }
+
+  if(password === newPassword) return ValidationError(res,{newPassword: "Old Password isn't allowed as New Password!"})
+
+  user.password = await bcrypt.hash(newPassword,10)
+  await user.save()
+  return Success(res,user)
+}
+
 
 module.exports = {
   login,
@@ -75,4 +121,6 @@ module.exports = {
   getProfile,
   getUsers,
   getUser,
+  updateProfile,
+  updatePassword
 }

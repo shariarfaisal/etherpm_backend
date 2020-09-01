@@ -4,7 +4,7 @@ const { AuthenticationError, BadRequest } = require('../utils/customResponses')
 
 
 const userAuth = (req,res,next) => {
-  let token = req.header('etherpm_user_token');
+  let token = req.header('x-user-token');
   if(!token) return AuthenticationError(res,'You are not authenticated!')
   token = token.replace('Bearer ','')
   try{
